@@ -2,7 +2,14 @@ import * as _ from "lodash";
 import * as flat from "flat";
 
 import { useState } from "react";
-import { Button, Typography } from "@material-ui/core";
+import {
+  Button,
+  Typography,
+  TextField,
+  Grid,
+  Container,
+  Divider
+} from "@material-ui/core";
 
 //dummy test data
 let o1 = {
@@ -57,7 +64,7 @@ const flexStyle = {
 const textAreaStyle = {
   flex: 1,
   margin: "30px",
-  resize: "none"
+  resize: "none",
 };
 
 const isJson = (data) => {
@@ -69,15 +76,14 @@ const isJson = (data) => {
   }
 };
 
-const highlight = (color,item,path) => {
-  return `<span class='difference' style='color:${color}' title='${path}'>${item}</span>`
-}
+const highlight = (color, bg, item, path) => {
+  return `<span class='difference' style='color:${color};background-color:${bg}' title='${path}'>${item}</span>`;
+};
 
-const createPathWithoutDelimiter = (delimiter,path) => {
-  return path
-  return path.replace(new RegExp(delimiter,"g"),".")
-  
-}
+const createPathWithoutDelimiter = (delimiter, path) => {
+  return path;
+  return path.replace(new RegExp(delimiter, "g"), ".");
+};
 
 export default function main() {
   const [showEditor, setShowEditor] = useState(true);
@@ -124,7 +130,7 @@ export default function main() {
                 colouredLeft,
                 item.key,
                 // `<span style='color:red'>${_.get(left, item.key)}</span>`
-                highlight("red",_.get(left, item.key),item.key)
+                highlight("white", "red", _.get(left, item.key), item.key)
               );
 
               // let splitPath = item.key.split(delimiter)
@@ -158,7 +164,7 @@ export default function main() {
                 colouredRight,
                 item.key,
                 // `<span style='color:green'>${_.get(right, item.key)}</span>`
-                highlight("green",_.get(right, item.key),item.key)
+                highlight("white", "green", _.get(right, item.key), item.key)
               );
 
               // let splitPath = item.key.split(delimiter)
@@ -231,14 +237,14 @@ export default function main() {
       const f1 = flat(left, { delimiter });
       const f2 = flat(right, { delimiter });
 
-      console.log("f1",JSON.stringify(f1))
-      console.log("f2",JSON.stringify(f2))
+      console.log("f1", JSON.stringify(f1));
+      console.log("f2", JSON.stringify(f2));
 
       let arrayWithDiffs = [];
 
       for (let l1 in f1) {
-        l1 = createPathWithoutDelimiter(delimiter,l1)
-        console.log("l1",l1)
+        l1 = createPathWithoutDelimiter(delimiter, l1);
+        console.log("l1", l1);
         const diff = _.isEqual(_.get(f1, l1), _.get(f2, l1));
         if (!diff) {
           arrayWithDiffs.push({
@@ -250,8 +256,8 @@ export default function main() {
       }
 
       for (let r1 in f2) {
-        r1 = createPathWithoutDelimiter(delimiter,r1)
-        console.log("r1",r1)
+        r1 = createPathWithoutDelimiter(delimiter, r1);
+        console.log("r1", r1);
         const diff = _.isEqual(_.get(f2, r1), _.get(f1, r1));
         if (!diff) {
           arrayWithDiffs.push({
@@ -270,25 +276,97 @@ export default function main() {
 
   return (
     <>
-      <Typography variant="body1" component="body1">
-        {message}
-      </Typography>
-      {showEditor && (
-        <div className="container" id="ip">
-          <form style={flexStyle} onSubmit={submissionHandler}>
-            <textarea
-              required
-              name="left"
-              id="left"
-              cols="30"
-              rows="32"
-              style={textAreaStyle}
-              onChange={jsonChangeHandler}
-              value={inputs.left}
-            ></textarea>
+      <Container maxWidth={"lg"}>
+        <Typography variant="body1" component="body1">
+          {message}
+        </Typography>
+        <br/>
+        {showEditor && (
+          <div className="container" id="ip">
+            <form onSubmit={submissionHandler}>
+              <Grid
+                container
+                direction="row"
+                justify="center"
+                alignItems="center"
+                spacing={3}
+              >
+                <Grid item md={5}>
+                  <TextField
+                    required
+                    name="left"
+                    id="left"
+                    rows={20}
+                    multiline
+                    label="Left"
+                    variant="outlined"
+                    onChange={jsonChangeHandler}
+                    value={inputs.left}
+                    fullWidth="true"
+                  ></TextField>
+                </Grid>
+                <Grid item>
+                  <Grid container direction="column" spacing={2}>
+                    <Grid item>
+                      <Button variant="contained" type="submit" id="compare">
+                        Compare
+                      </Button>
+                    </Grid>
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        onClick={() => {
+                          setInputs({ left: "", right: "" });
+                          setOutputs({ left: "", right: "" });
+                          setMessage(defaultMessage);
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Grid>
+                <Grid item md={5}>
+                  <TextField
+                    required
+                    multiline
+                    name="right"
+                    id="right"
+                    label="Right"
+                    rows={20}
+                    variant="outlined"
+                    onChange={jsonChangeHandler}
+                    value={inputs.right}
+                    fullWidth="true"
+                  ></TextField>
+                </Grid>
+              </Grid>
+            </form>
+          </div>
+        )}
+        {!showEditor && (
+          <div className="container" id="op" style={flexStyle}>
+            <div
+              id="leftOp"
+              style={{
+                ...textAreaStyle,
+                border: "solid",
+                overflowY: "auto",
+                height: "512px",
+              }}
+              dangerouslySetInnerHTML={{
+                __html: `<pre></div>${JSON.stringify(outputs.left, null, "  ") || ""
+                  }</div></pre>`,
+              }}
+            ></div>
+
             <div style={{ ...textAreaStyle, flex: 0.25 }}>
-              <Button variant="contained" type="submit" id="compare">
-                Compare
+              <Button
+                variant="contained"
+                onClick={(e) => setShowEditor(true)}
+                id="edit"
+              >
+                Edit
               </Button>
               <br />
               <Button
@@ -297,68 +375,28 @@ export default function main() {
                   setInputs({ left: "", right: "" });
                   setOutputs({ left: "", right: "" });
                   setMessage(defaultMessage);
+                  setShowEditor(true);
                 }}
               >
                 Clear
               </Button>
             </div>
-            <textarea
-              required
-              name="right"
-              id="right"
-              cols="30"
-              rows="32"
-              style={textAreaStyle}
-              onChange={jsonChangeHandler}
-              value={inputs.right}
-            ></textarea>
-          </form>
-        </div>
-      )}
-      {!showEditor && (
-        <div className="container" id="op" style={flexStyle}>
-          <div
-            id="leftOp"
-            style={{ ...textAreaStyle, border: "solid", overflowY:"auto", height:"512px" }}
-            dangerouslySetInnerHTML={{
-              __html: `<pre></div>${
-                JSON.stringify(outputs.left, null, "  ") || ""
-              }</div></pre>`,
-            }}
-          ></div>
-
-          <div style={{ ...textAreaStyle, flex: 0.25 }}>
-            <Button
-              variant="contained"
-              onClick={(e) => setShowEditor(true)}
-              id="edit"
-            >
-              Edit
-            </Button>
-            <br />
-            <Button
-              variant="contained"
-              onClick={() => {
-                setInputs({ left: "", right: "" });
-                setOutputs({ left: "", right: "" });
-                setMessage(defaultMessage);
-                setShowEditor(true);
+            <div
+              id="rightOp"
+              style={{
+                ...textAreaStyle,
+                border: "solid",
+                overflowY: "auto",
+                height: "512px",
               }}
-            >
-              Clear
-            </Button>
+              dangerouslySetInnerHTML={{
+                __html: `<pre></div>${JSON.stringify(outputs.right, null, "  ") || ""
+                  }</div></pre>`,
+              }}
+            ></div>
           </div>
-          <div
-            id="rightOp"
-            style={{ ...textAreaStyle, border: "solid", overflowY:"auto", height:"512px" }}
-            dangerouslySetInnerHTML={{
-              __html: `<pre></div>${
-                JSON.stringify(outputs.right, null, "  ") || ""
-              }</div></pre>`,
-            }}
-          ></div>
-        </div>
-      )}
+        )}
+      </Container>
     </>
   );
 }

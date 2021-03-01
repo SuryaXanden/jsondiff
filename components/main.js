@@ -57,6 +57,7 @@ const flexStyle = {
 const textAreaStyle = {
   flex: 1,
   margin: "30px",
+  resize: "none"
 };
 
 const isJson = (data) => {
@@ -67,6 +68,16 @@ const isJson = (data) => {
     return false;
   }
 };
+
+const highlight = (color,item,path) => {
+  return `<span class='difference' style='color:${color}' title='${path}'>${item}</span>`
+}
+
+const createPathWithoutDelimiter = (delimiter,path) => {
+  return path
+  return path.replace(new RegExp(delimiter,"g"),".")
+  
+}
 
 export default function main() {
   const [showEditor, setShowEditor] = useState(true);
@@ -112,7 +123,8 @@ export default function main() {
               _.set(
                 colouredLeft,
                 item.key,
-                `<span style='color:red'>${_.get(left, item.key)}</span>`
+                // `<span style='color:red'>${_.get(left, item.key)}</span>`
+                highlight("red",_.get(left, item.key),item.key)
               );
 
               // let splitPath = item.key.split(delimiter)
@@ -145,7 +157,8 @@ export default function main() {
               _.set(
                 colouredRight,
                 item.key,
-                `<span style='color:green'>${_.get(right, item.key)}</span>`
+                // `<span style='color:green'>${_.get(right, item.key)}</span>`
+                highlight("green",_.get(right, item.key),item.key)
               );
 
               // let splitPath = item.key.split(delimiter)
@@ -202,11 +215,6 @@ export default function main() {
       message: "",
     };
 
-    // inputs.left
-    // console.log(`inputs.left : ${JSON.stringify(inputs.left)}`);
-    // inputs.right
-    // console.log(`inputs.right : ${JSON.stringify(inputs.right)}`);
-
     if (_.isEqual(left, right) === true) {
       result.equal = true;
     } else if (
@@ -223,9 +231,14 @@ export default function main() {
       const f1 = flat(left, { delimiter });
       const f2 = flat(right, { delimiter });
 
+      console.log("f1",JSON.stringify(f1))
+      console.log("f2",JSON.stringify(f2))
+
       let arrayWithDiffs = [];
 
       for (let l1 in f1) {
+        l1 = createPathWithoutDelimiter(delimiter,l1)
+        console.log("l1",l1)
         const diff = _.isEqual(_.get(f1, l1), _.get(f2, l1));
         if (!diff) {
           arrayWithDiffs.push({
@@ -237,6 +250,8 @@ export default function main() {
       }
 
       for (let r1 in f2) {
+        r1 = createPathWithoutDelimiter(delimiter,r1)
+        console.log("r1",r1)
         const diff = _.isEqual(_.get(f2, r1), _.get(f1, r1));
         if (!diff) {
           arrayWithDiffs.push({
@@ -266,7 +281,7 @@ export default function main() {
               name="left"
               id="left"
               cols="30"
-              rows="30"
+              rows="32"
               style={textAreaStyle}
               onChange={jsonChangeHandler}
               value={inputs.left}
@@ -292,7 +307,7 @@ export default function main() {
               name="right"
               id="right"
               cols="30"
-              rows="30"
+              rows="32"
               style={textAreaStyle}
               onChange={jsonChangeHandler}
               value={inputs.right}
@@ -304,7 +319,7 @@ export default function main() {
         <div className="container" id="op" style={flexStyle}>
           <div
             id="leftOp"
-            style={{ ...textAreaStyle, border: "solid" }}
+            style={{ ...textAreaStyle, border: "solid", overflowY:"auto", height:"512px" }}
             dangerouslySetInnerHTML={{
               __html: `<pre></div>${
                 JSON.stringify(outputs.left, null, "  ") || ""
@@ -335,7 +350,7 @@ export default function main() {
           </div>
           <div
             id="rightOp"
-            style={{ ...textAreaStyle, border: "solid" }}
+            style={{ ...textAreaStyle, border: "solid", overflowY:"auto", height:"512px" }}
             dangerouslySetInnerHTML={{
               __html: `<pre></div>${
                 JSON.stringify(outputs.right, null, "  ") || ""
